@@ -84,7 +84,7 @@ export default {
 ```
   
 ## 效果
-[**示例页面**](http://raw.githack.com/xiafl/hx_uniapp_compontent__xfl-select/master/test_select/unpackage/dist/build/h5/index.html)
+[**示例页面（需要在手机模式下查看，否则样式可能有点问题）**](http://raw.githack.com/xiafl/hx_uniapp_compontent__xfl-select/master/test_select/unpackage/dist/build/h5/index.html)
    
 ![](example.png)
 
