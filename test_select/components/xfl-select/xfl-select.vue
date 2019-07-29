@@ -57,6 +57,7 @@
 	 * 创建: 2019.6.27
 	 */
 	import Vue from 'vue';
+	Vue.__xfl_select = Vue.__xfl_select || new Vue();  // 这个实例专门用来做xfl-select多个实例之间的通信中间站
 	export default {
 		name: 'xfl-select',
 		props: {
@@ -71,6 +72,12 @@
 			isCanInput: {      // 选择框是否可以输入值
 			  type: Boolean,  
 			  default: false,
+			},
+			selectHideType: {     // 本选择框与其它选择框之间的关系
+			  type: String,        
+			  default: 'hideAll', // 'independent' - 是独立的，与其它选择框互不影响  'hideAll' - 任何一个选择框展开时，隐藏所有其它选择框
+								  // 'hideOthers'- 当本选择框展开时，隐藏其它的选择框。  当其它选择框展开时，不隐藏本选择框。 
+								  // 'hideSelf' -  当本选择框展开时，不隐藏其它的选择框。当其它选择框展开时，隐藏本选择框。
 			},
 			placeholder: {     // 选择框的placeholder
 			  type: String,  
@@ -148,11 +155,21 @@
 			},
 		},
 		mounted(){
+			Vue.__xfl_select.$on('open', this.onOtherXflSelectOpen);
 			this.switchMgr = new Switch(this.onListShow, this.onListHide);  // 创建开关对象
 			this.onDataChange_listShow(this.listShow, null); // 由于 watch 不到初始值，所以需要在这里手动调用一次
 			this.init(); //进行初始化
 		},
+		beforeDestroy(){
+			Vue.__xfl_select.$off('open', this.onOtherXflSelectOpen);
+		},
 		methods: {
+			onOtherXflSelectOpen(component){ //当本组件的其它实例展开时的回调
+				if(this.selectHideType === 'independent' || this.selectHideType === 'hideOthers'){
+					return;
+				}
+				component !== this && this.switchMgr.close(100);
+			},
 			/************************** 初始化函数 ****************************/
 			//进行初始化
 			init(){
@@ -319,6 +336,11 @@
 				this.isShowList = true;
 				this.isRotate = true;
 				this.$emit('visible-change', true);
+				
+				if(this.selectHideType === 'independent' || this.selectHideType === 'hideSelf'){
+					return;
+				}
+				Vue.__xfl_select.$emit('open', this);
 			}
 			/************************** 列表的操作(显示/隐藏/点击) ****************************/
 		}
@@ -425,9 +447,7 @@
 		const args = arguments;
 		selector = typeof args[0] === 'string' ? args[0] : String(selector);
 		if(typeof args[1] !== 'function'){
-			component = args[1];
-			callback = args[2];
-			thisObj = args[3];
+			component = args[1]; callback = args[2]; thisObj = args[3];
 		}
 		!component instanceof Vue && (component = null);  //传入非组件对象，会报错
 		

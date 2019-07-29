@@ -50,6 +50,7 @@
 				:style_Container="listBoxStyle"
 				:placeholder = "'placeholder'"
 				:initValue="'芒果'"
+				:selectHideType="'independent'"
 				>
 				</xfl-select>
 			</view>

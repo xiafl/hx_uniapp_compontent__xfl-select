@@ -66,8 +66,9 @@
 
 
 
-var _vue = _interopRequireDefault(__webpack_require__(/*! vue */ "./node_modules/@dcloudio/vue-cli-plugin-uni/packages/mp-vue/dist/mp.runtime.esm.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}var _default2 =
-{
+var _vue = _interopRequireDefault(__webpack_require__(/*! vue */ "./node_modules/@dcloudio/vue-cli-plugin-uni/packages/mp-vue/dist/mp.runtime.esm.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+_vue.default.__xfl_select = _vue.default.__xfl_select || new _vue.default(); // 这个实例专门用来做xfl-select多个实例之间的通信中间站
+var _default2 = {
   name: 'xfl-select',
   props: {
     list: { // 原始数据
@@ -82,6 +83,12 @@ var _vue = _interopRequireDefault(__webpack_require__(/*! vue */ "./node_modules
       type: Boolean,
       default: false },
 
+    selectHideType: { // 本选择框与其它选择框之间的关系
+      type: String,
+      default: 'hideAll' // 'independent' - 是独立的，与其它选择框互不影响  'hideAll' - 任何一个选择框展开时，隐藏所有其它选择框
+      // 'hideOthers'- 当本选择框展开时，隐藏其它的选择框。  当其它选择框展开时，不隐藏本选择框。 
+      // 'hideSelf' -  当本选择框展开时，不隐藏其它的选择框。当其它选择框展开时，隐藏本选择框。
+    },
     placeholder: { // 选择框的placeholder
       type: String,
       default: '请选择' },
@@ -158,11 +165,21 @@ var _vue = _interopRequireDefault(__webpack_require__(/*! vue */ "./node_modules
     } },
 
   mounted: function mounted() {
+    _vue.default.__xfl_select.$on('open', this.onOtherXflSelectOpen);
     this.switchMgr = new Switch(this.onListShow, this.onListHide); // 创建开关对象
     this.onDataChange_listShow(this.listShow, null); // 由于 watch 不到初始值，所以需要在这里手动调用一次
     this.init(); //进行初始化
   },
+  beforeDestroy: function beforeDestroy() {
+    _vue.default.__xfl_select.$off('open', this.onOtherXflSelectOpen);
+  },
   methods: {
+    onOtherXflSelectOpen: function onOtherXflSelectOpen(component) {//当本组件的其它实例展开时的回调
+      if (this.selectHideType === 'independent' || this.selectHideType === 'hideOthers') {
+        return;
+      }
+      component !== this && this.switchMgr.close(100);
+    },
     /************************** 初始化函数 ****************************/
     //进行初始化
     init: function init() {
@@ -329,6 +346,11 @@ var _vue = _interopRequireDefault(__webpack_require__(/*! vue */ "./node_modules
       this.isShowList = true;
       this.isRotate = true;
       this.$emit('visible-change', true);
+
+      if (this.selectHideType === 'independent' || this.selectHideType === 'hideSelf') {
+        return;
+      }
+      _vue.default.__xfl_select.$emit('open', this);
     }
     /************************** 列表的操作(显示/隐藏/点击) ****************************/ }
 
@@ -435,9 +457,7 @@ function getNodeInfo()
   var args = arguments;
   selector = typeof args[0] === 'string' ? args[0] : String(selector);
   if (typeof args[1] !== 'function') {
-    component = args[1];
-    callback = args[2];
-    thisObj = args[3];
+    component = args[1];callback = args[2];thisObj = args[3];
   }
   !component instanceof _vue.default && (component = null); //传入非组件对象，会报错
 
