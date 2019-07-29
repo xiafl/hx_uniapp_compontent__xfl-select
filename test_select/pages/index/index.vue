@@ -1,15 +1,16 @@
 <template>
 	<view class="content">
-		<view style="margin-top: 50px;">
+		<view style="padding-top: 50px;">
 			有清除按钮
 			<view style="width: 80%; margin: auto; margin-bottom: 20px;">
 				<xfl-select 
 				:list="list"
 				:initValue="'葡萄'"
-				:showItemNum="5" 
+				:showItemNum="2" 
 				:isCanInput="false"  
 				:style_Container="listBoxStyle"
 				:placeholder = "'placeholder'"
+				@visible-change = 'visibleChange'
 				>
 				</xfl-select>
 			</view>
@@ -17,11 +18,12 @@
 			<view style="width: 80%; margin: auto;margin-bottom: 20px;">
 				<xfl-select 
 				:list="list"
-				:clearable="false"
+				:clearable="true"
 				:showItemNum="5" 
 				:isCanInput="true"  
 				:style_Container="listBoxStyle"
 				:placeholder = "'placeholder'"
+				@change="change"
 				>
 				</xfl-select>
 			</view>
@@ -60,9 +62,7 @@
 	export default {
 		data() {
 			return {
-				listBoxStyle: `,
-					color: blue;  font-size: 16px;
-				`,
+				listBoxStyle: `height: 40px; font-size: 16px;`,
 				list: [
 					'苹果',
 					{value: '香蕉', disabled: true},
@@ -72,7 +72,21 @@
 				],
 			}
 		},
+		methods: {
+			visibleChange(isShow){ // 列表框的显示隐藏事件
+				console.log('isShow::', isShow);
+			},
+			change({newVal, oldVal, index, orignItem}){ 
+				console.log(newVal, oldVal, index, orignItem);
+			}
+		},
 		components: { xflSelect },
+
+		 /* 
+			// 或者在 main.js 中注册为全局组件 
+			import xflSelect from './components/xfl-select/xfl-select.vue';
+			Vue.component('xfl-select', xflSelect);
+		*/
 	}
 </script>
 

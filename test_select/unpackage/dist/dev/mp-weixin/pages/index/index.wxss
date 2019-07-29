@@ -1,0 +1,6 @@
+
+.content {
+	text-align: center;
+	height: 400rpx;
+}
+
